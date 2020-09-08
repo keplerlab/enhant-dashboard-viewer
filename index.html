@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Enhant Dashboard</title>
+        <link rel="stylesheet" href="public/css/bootstrap.min.css">
+        <link rel="stylesheet" href="public/css/enhant.css">
+
+        <script src="public/scripts/jquery.min.js"></script>
+        <script src="public/scripts/bootstrap.min.js"></script>
+        <script src="public/scripts/handlebar.js"></script>
+        <script src="public/scripts/app.js"></script>
+
+    </head>
+    <body>
+        <div class="container-fluid">
+
+            <!--Header-->
+            <div class="row header">
+                <div class="col-md-2 col-md-offset-1 text-center">
+                    <div class="logo">
+                       <img src="public/img/logo.svg">
+                    </div>
+                </div>
+
+                <div class="col-md-1 col-md-offset-1 text-center">
+                    <div class="home">
+                       <a class="text-white" href="javascript:void(0);" onclick="loadUploadTemplateIntoApp();">Home</a>
+                    </div>
+                </div>
+
+                <div class="col-md-1 text-center">
+                    <div class="dashboard">
+                       <a class="text-white" href="#">Dashboard</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-1 sidenav has-shadow">
+                     <!--Side Nav-->
+                    <div>
+                        <ul></ul>
+                    </div>
+
+                </div>
+                <div class="col-xs-11 col-xs-offset-1 content">
+                    <!--app-->
+                    <!--Contents will render inside this-->
+                    <div id="app"></div>
+                </div>
+            </div>
+            
+        </div>
+    </body>
+
+    <script>
+
+    function getUploadTemplate(){
+        const upload_template = Handlebars.templates.upload;
+        const html = upload_template({});
+        return html;
+    }
+
+    function getDashboardTemplate(){
+        const dashboard_template = Handlebars.templates.dashboard;
+        const html = dashboard_template({});
+        return html;
+    }
+
+    function loadUploadTemplateIntoApp(){
+        const el = $('#app');
+        var html = getUploadTemplate();
+        el.html(html);
+    }
+
+    function loadDashboardTemplateIntoApp(){
+        const el = $('#app');
+        var html = getDashboardTemplate();
+        el.html(html);
+    }
+
+    $(document).ready(function(){
+
+        loadUploadTemplateIntoApp();
+    });
+
+
+    window.addEventListener("dashboard", function(){
+        loadDashboardTemplateIntoApp();
+    });
+
+    </script>
+</html>
