@@ -16,19 +16,19 @@
 
             <!--Header-->
             <div class="row header">
-                <div class="col-md-2 col-md-offset-1 text-center">
+                <div class="col-xs-2 col-xs-offset-1 text-center">
                     <div class="logo">
                        <img src="public/img/logo.svg">
                     </div>
                 </div>
 
-                <div class="col-md-1 col-md-offset-1 text-center">
+                <div class="col-xs-1 col-xs-offset-1 text-center">
                     <div class="home">
                        <a class="text-white" href="javascript:void(0);" onclick="loadUploadTemplateIntoApp();">Home</a>
                     </div>
                 </div>
 
-                <div class="col-md-1 text-center">
+                <div class="col-xs-1 text-center">
                     <div class="dashboard">
                        <a class="text-white" href="#">Dashboard</a>
                     </div>
@@ -36,21 +36,23 @@
             </div>
 
             <div class="row">
-                <div class="col-xs-1 sidenav has-shadow">
+                <div class="sidenav has-shadow">
                      <!--Side Nav-->
                     <div>
                         <ul></ul>
                     </div>
 
                 </div>
-                <div class="col-xs-11 col-xs-offset-1 content">
+                <div class="col-xs-10 col-xs-offset-1 content">
                     <!--app-->
                     <!--Contents will render inside this-->
-                    <div id="app"></div>
+                    <div id="app" class="row"></div>
                 </div>
             </div>
             
         </div>
+
+        <video id="video-type-check" style="display: none;"></video>
     </body>
 
     <script>
@@ -61,9 +63,68 @@
         return html;
     }
 
-    function getDashboardTemplate(){
+    function generateContextForDashboardTemplate(data){
+
+        var context = {
+            "recording": false,
+            "bookmark": false,
+            "images": false,
+            "notes": false,
+            "sentiment_outliers": false,
+            "questions": false
+        };
+
+        var recording_data = data.recording;
+        var zip_data = data.zip;
+
+        var videoNode = document.getElementById('video-type-check');
+        var canPlay = videoNode.canPlayType(recording_data.type);  
+
+        canPlay = (canPlay === '' ? false : true);
+
+        // set context recording
+        context.recording = canPlay;
+
+        var all_notes = zip_data.notes;
+        if (all_notes.length){
+            
+            var bookmarks = all_notes.filter(function(obj){ return obj.type == "bookmark"});
+            var images = all_notes.filter(function(obj){ return obj.type == "image"});
+            var notes = all_notes.filter(function(obj){ return obj.type == "notes"});
+
+            if (bookmarks.length){
+                context.bookmark = true;
+            }
+
+            if (images.length){
+                context.images = true;
+            }
+
+            if (notes.length){
+                context.notes = true;
+            }
+        }
+
+        if (zip_data.highSentimentSentence.highSentimentSentence.length || zip_data.lowSentimentSentence.lowSentimentSentence.length){
+            context.sentiment_outliers = true;
+        }
+
+        if (zip_data.questionsAsked.questionsAsked.length){
+            context.questions = true;
+        }
+
+        // console.log(" context ", context);
+
+        return context;
+
+    }
+
+    function getDashboardTemplate(data, context){
         const dashboard_template = Handlebars.templates.dashboard;
-        const html = dashboard_template({});
+        
+        const html = dashboard_template({
+           context: context
+        });
         return html;
     }
 
@@ -73,20 +134,41 @@
         el.html(html);
     }
 
-    function loadDashboardTemplateIntoApp(){
+    function loadDashboardTemplateIntoApp(data, context){
         const el = $('#app');
-        var html = getDashboardTemplate();
+        var html = getDashboardTemplate(data, context);
         el.html(html);
     }
 
-    $(document).ready(function(){
+    function registerHelperFunctions(){
+        Handlebars.registerHelper('CheckIfbothTrue', function(v1, v2, options) {
+            if(v1 && v2) {
+                return options.fn(this);
+            }
+            return options.inverse(this);
+        });
+    }
 
+    $(document).ready(function(){
+        registerHelperFunctions();
         loadUploadTemplateIntoApp();
     });
 
 
-    window.addEventListener("dashboard", function(){
-        loadDashboardTemplateIntoApp();
+    window.addEventListener("dashboard", function(evt){
+
+        var data = evt.detail;
+        
+        var context = generateContextForDashboardTemplate(data);
+        loadDashboardTemplateIntoApp(data, context);
+
+        // forward message to dashboard
+        var event = new CustomEvent("dashboard-data", {
+            detail: evt.detail
+        });
+
+        window.dispatchEvent(event);
+
     });
 
     </script>
